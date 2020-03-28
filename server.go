@@ -6,6 +6,7 @@ import (
 	"github.com/ATechnoHazard/hestia-chat/api/middleware"
 	"github.com/ATechnoHazard/hestia-chat/api/websocket"
 	"github.com/ATechnoHazard/hestia-chat/pkg/chat"
+	"github.com/ATechnoHazard/hestia-chat/pkg/entities"
 	"github.com/fasthttp/router"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -58,7 +59,7 @@ func makeDB() *gorm.DB {
 		db = db.Debug()
 	}
 	log.Infow("Automigrating db")
-	//db.AutoMigrate(&entities.Message{}, &entities.Chat{})
+	db.AutoMigrate(&entities.Message{}, &entities.Chat{})
 	return db
 }
 

@@ -16,7 +16,6 @@ func CORS(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 		ctx.Response.Header.Set("Access-Control-Allow-Headers", corsAllowHeaders)
 		ctx.Response.Header.Set("Access-Control-Allow-Methods", corsAllowMethods)
 		ctx.Response.Header.Set("Access-Control-Allow-Origin", corsAllowOrigin)
-
 		next(ctx)
 	}
 }

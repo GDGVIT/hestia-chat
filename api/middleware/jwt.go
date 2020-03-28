@@ -10,7 +10,7 @@ import (
 )
 
 type Token struct {
-	jwt.Claims
+	jwt.StandardClaims
 	UserID uint `json:"_id"`
 }
 
