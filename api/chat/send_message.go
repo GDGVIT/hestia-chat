@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/ATechnoHazard/hestia-chat/api/middleware"
 	"github.com/ATechnoHazard/hestia-chat/api/views"
+	entities2 "github.com/ATechnoHazard/hestia-chat/api/views/entities"
 	"github.com/ATechnoHazard/hestia-chat/api/websocket"
 	"github.com/ATechnoHazard/hestia-chat/internal/utils"
 	"github.com/ATechnoHazard/hestia-chat/pkg/chat"
@@ -81,8 +82,29 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func getChatsForUser(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		user := &entities2.User{}
+		if err := json.Unmarshal(ctx.PostBody(), user); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+		chats, err := msgSvc.GetChatsByID(user.ID)
+		if err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		msg := utils.Message(http.StatusOK, "Successfully fetched chats for user")
+		msg["chats"] = chats
+		utils.Respond(ctx, msg)
+		return
+	}
+}
+
 func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/sendMessage", middleware.JwtAuth(sendMessage(msgSvc)))
 	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
 	r.POST(base+"/getMessages", middleware.JwtAuth(getChatMessages(msgSvc)))
+	r.POST(base+"/getChats", middleware.JwtAuth(getChatsForUser(msgSvc)))
 }
