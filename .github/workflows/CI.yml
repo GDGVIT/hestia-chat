@@ -1,0 +1,21 @@
+name: Push To Package Registry
+on: [push]
+jobs:
+  publish_docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v1
+
+      - name: Setup docker
+        uses: docker-practice/actions-setup-docker@0.0.1
+
+      - name: Publish to Registry
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
+        run: |
+          docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+          docker image build -t atechnohazard/hestia-chat .
+          docker push atechnohazard/hestia-chat:latest
