@@ -1,9 +1,7 @@
 package entities
 
-import "github.com/jinzhu/gorm"
-
 type Chat struct {
-	gorm.Model
+	Receiver uint      `json:"receiver" gorm:"primary_key"`
 	Title    string    `json:"title"`
-	Messages []Message `json:"-"`
+	Messages []Message `json:"messages" gorm:"foreignKey:RecieverRefer"`
 }
