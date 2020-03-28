@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	chat2 "github.com/ATechnoHazard/hestia-chat/api/chat"
+	"github.com/ATechnoHazard/hestia-chat/api/middleware"
 	"github.com/ATechnoHazard/hestia-chat/api/websocket"
 	"github.com/ATechnoHazard/hestia-chat/pkg/chat"
 	"github.com/fasthttp/router"
@@ -88,5 +89,5 @@ func main() {
 	//go websocket.HandleMessages()
 
 	log.Infow("Bringing up chat microservice", "port", port, "base path", base)
-	log.Fatal(fasthttp.ListenAndServe(fmt.Sprintf(":%s", port), mux.Handler))
+	log.Fatal(fasthttp.ListenAndServe(fmt.Sprintf(":%s", port), middleware.CORS(mux.Handler)))
 }

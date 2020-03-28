@@ -24,7 +24,7 @@ func HandleConns(ctx *fasthttp.RequestCtx) {
 		Clients[uint(chatID)] = conn
 		log.Printf("Connecting to websocket with chatID %v ", chatID)
 		select {
-			case msg := <-Broadcast:
+		case msg := <-Broadcast:
 			log.Println(msg, Clients)
 			err := Clients[msg.ReceiverRefer].WriteJSON(msg)
 			if err != nil {

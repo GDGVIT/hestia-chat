@@ -8,12 +8,31 @@ import (
 
 type Service interface {
 	SaveMessage(msg *entities.Message) error
-	GetMessages(chatID uint) ([]entities.Message, error)
+	GetMessages(to, from uint) ([]entities.Message, error)
 	CreateChat(chat *entities.Chat) error
+	GetChatsByID(userID uint) ([]entities.Chat, error)
 }
 
 type chatSvc struct {
 	db *gorm.DB
+}
+
+func (c *chatSvc) GetChatsByID(from uint) ([]entities.Chat, error) {
+	tx := c.db.Begin()
+	chats := make([]entities.Chat, 0)
+	err := tx.Where("sender = ? OR receiver = ?", from, from).Find(&chats).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, pkg.ErrNotFound
+		default:
+			return nil, pkg.ErrDatabase
+		}
+	}
+
+	tx.Commit()
+	return chats, nil
 }
 
 func NewChatService(db *gorm.DB) Service {
@@ -52,10 +71,10 @@ func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 	return nil
 }
 
-func (c *chatSvc) GetMessages(chatID uint) ([]entities.Message, error) {
+func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 	tx := c.db.Begin()
 	chat := &entities.Chat{}
-	err := tx.Where("receiver = ?", chatID).Find(chat).Error
+	err := tx.Where("receiver = ?", to).Where("sender = ?", from).Find(chat).Error
 	if err != nil {
 		tx.Rollback()
 		switch err {

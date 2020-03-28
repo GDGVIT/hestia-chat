@@ -1,23 +1,18 @@
 package chat
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
+	"github.com/ATechnoHazard/hestia-chat/api/middleware"
 	"github.com/ATechnoHazard/hestia-chat/api/views"
-	entities2 "github.com/ATechnoHazard/hestia-chat/api/views/entities"
 	"github.com/ATechnoHazard/hestia-chat/api/websocket"
 	"github.com/ATechnoHazard/hestia-chat/internal/utils"
 	"github.com/ATechnoHazard/hestia-chat/pkg/chat"
 	"github.com/ATechnoHazard/hestia-chat/pkg/entities"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
-	"github.com/wI2L/jettison"
-	"io/ioutil"
 	"net/http"
+	"strconv"
 )
-
-var AuthUrl = "hestia-auth.herokuapp.com"
 
 func sendMessage(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	return func(ctx *fasthttp.RequestCtx) {
@@ -29,33 +24,8 @@ func sendMessage(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 		}
 
 		// Pull token off headers
-		token := string(ctx.Request.Header.Peek("Authorization"))
-
-		// Marshal auth request body
-		reqBody, _ := jettison.Marshal(map[string]string{"token": token})
-
-		// Send auth request
-		resp, err := http.Post(fmt.Sprintf("http://%s/api/user/verify", AuthUrl), "application/json", bytes.NewBuffer(reqBody))
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-
-		// Unmarshal auth response
-		defer resp.Body.Close()
-		authResp := &entities2.AuthResponse{}
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-		err = json.Unmarshal(body, authResp)
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-
-		msg.From = authResp.UserID
+		userID, _ := strconv.Atoi(string(ctx.Request.Header.Peek("user_id")))
+		msg.From = uint(userID)
 
 		// Save message to db
 		if err := msgSvc.SaveMessage(msg); err != nil {
@@ -78,7 +48,7 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		msgs, err := msgSvc.GetMessages(msg.ReceiverRefer)
+		msgs, err := msgSvc.GetMessages(msg.ReceiverRefer, msg.From)
 		if err != nil {
 			views.Wrap(ctx, err)
 			return
@@ -112,7 +82,7 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 }
 
 func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
-	r.POST(base+"/sendMessage", sendMessage(msgSvc))
-	r.POST(base+"/createChat", createChat(msgSvc))
-	r.POST(base+"/getMessages", getChatMessages(msgSvc))
+	r.POST(base+"/sendMessage", middleware.JwtAuth(sendMessage(msgSvc)))
+	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
+	r.POST(base+"/getMessages", middleware.JwtAuth(getChatMessages(msgSvc)))
 }
