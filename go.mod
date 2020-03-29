@@ -1,3 +1,4 @@
+// +heroku goVersion go1.13
 module github.com/ATechnoHazard/hestia-chat
 
 go 1.13
