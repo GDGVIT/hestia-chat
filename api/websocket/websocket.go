@@ -22,6 +22,11 @@ func HandleConns(ctx *fasthttp.RequestCtx) {
 	chatID, _ := strconv.Atoi(string(ctx.QueryArgs().Peek("chat")))
 	err := upgrader.Upgrade(ctx, func(conn *websocket.Conn) {
 		Clients[uint(chatID)] = conn
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("recovered from panic")
+			}
+		}()
 		log.Printf("Connecting to websocket with chatID %v ", chatID)
 		select {
 		case msg := <-Broadcast:
