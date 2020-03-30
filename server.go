@@ -67,7 +67,7 @@ func main() {
 	mux := router.New()
 	mux.PanicHandler = func(ctx *fasthttp.RequestCtx, i interface{}) {
 		ctx.SetStatusCode(http.StatusInternalServerError)
-		log.Fatalw("PANIC:",
+		log.Error("PANIC:",
 			"err", i)
 	}
 
