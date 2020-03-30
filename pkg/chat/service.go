@@ -84,7 +84,8 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 			return nil, pkg.ErrDatabase
 		}
 	}
-	err = tx.Where("receiver = ?", to).Where("from = ?", from).Find(&chat.Messages).Error
+
+	err = tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Find(&chat.Messages).Error
 	if err != nil {
 		tx.Rollback()
 		switch err {

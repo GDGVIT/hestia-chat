@@ -26,7 +26,7 @@ func sendMessage(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 
 		// Pull token off headers
 		userID, _ := strconv.Atoi(string(ctx.Request.Header.Peek("user_id")))
-		msg.From = uint(userID)
+		msg.Sender = uint(userID)
 
 		// Save message to db
 		if err := msgSvc.SaveMessage(msg); err != nil {
@@ -49,7 +49,7 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		msgs, err := msgSvc.GetMessages(msg.ReceiverRefer, msg.From)
+		msgs, err := msgSvc.GetMessages(msg.ReceiverRefer, msg.Sender)
 		if err != nil {
 			views.Wrap(ctx, err)
 			return
