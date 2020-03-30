@@ -102,9 +102,53 @@ func getChatsForUser(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func getMyChats(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		user := &entities2.User{}
+		if err := json.Unmarshal(ctx.PostBody(), user); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		chats, err := msgSvc.GetMyChats(user.ID)
+		if err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		msg := utils.Message(http.StatusOK, "Successfully fetched my chats")
+		msg["chats"] = chats
+		utils.Respond(ctx, msg)
+		return
+	}
+}
+
+func getOtherChats(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		user := &entities2.User{}
+		if err := json.Unmarshal(ctx.PostBody(), user); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		chats, err := msgSvc.GetOtherChats(user.ID)
+		if err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		msg := utils.Message(http.StatusOK, "Successfully fetched my chats")
+		msg["chats"] = chats
+		utils.Respond(ctx, msg)
+		return
+	}
+}
+
 func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/sendMessage", middleware.JwtAuth(sendMessage(msgSvc)))
 	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
 	r.POST(base+"/getMessages", middleware.JwtAuth(getChatMessages(msgSvc)))
 	r.POST(base+"/getChats", middleware.JwtAuth(getChatsForUser(msgSvc)))
+	r.POST(base+"/getMyChats", middleware.JwtAuth(getMyChats(msgSvc)))
+	r.POST(base+"/getOtherChats", middleware.JwtAuth(getOtherChats(msgSvc)))
 }

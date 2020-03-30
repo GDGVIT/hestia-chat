@@ -11,6 +11,8 @@ type Service interface {
 	GetMessages(to, from uint) ([]entities.Message, error)
 	CreateChat(chat *entities.Chat) error
 	GetChatsByID(userID uint) ([]entities.Chat, error)
+	GetMyChats(userID uint) ([]entities.Chat, error)
+	GetOtherChats(userID uint) ([]entities.Chat, error)
 }
 
 type chatSvc struct {
@@ -98,4 +100,36 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 
 	tx.Commit()
 	return chat.Messages, nil
+}
+
+func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
+	tx := c.db.Begin()
+	chats := make([]entities.Chat, 0)
+	if err := tx.Where("receiver = ?", userID).Find(&chats).Error; err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, pkg.ErrNotFound
+		default:
+			return nil, pkg.ErrDatabase
+		}
+	}
+	tx.Commit()
+	return chats, nil
+}
+
+func (c *chatSvc) GetOtherChats(userID uint) ([]entities.Chat, error) {
+	tx := c.db.Begin()
+	chats := make([]entities.Chat, 0)
+	if err := tx.Where("sender = ?", userID).Find(&chats).Error; err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, pkg.ErrNotFound
+		default:
+			return nil, pkg.ErrDatabase
+		}
+	}
+	tx.Commit()
+	return chats, nil
 }
