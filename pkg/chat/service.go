@@ -4,6 +4,7 @@ import (
 	"github.com/ATechnoHazard/hestia-chat/pkg"
 	"github.com/ATechnoHazard/hestia-chat/pkg/entities"
 	"github.com/jinzhu/gorm"
+	"sort"
 )
 
 type Service interface {
@@ -77,7 +78,7 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 	tx := c.db.Begin()
 	msgs := make([]entities.Message, 0)
 
-	err := tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Find(&msgs).Error
+	err := tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Order("created_at").Find(&msgs).Error
 	if err != nil {
 		tx.Rollback()
 		switch err {
@@ -90,7 +91,7 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 
 	msgs2 := make([]entities.Message, 0)
 
-	err = tx.Where("receiver_refer = ?", from).Where("sender = ?", to).Find(&msgs2).Error
+	err = tx.Where("receiver_refer = ?", from).Where("sender = ?", to).Order("created_at").Find(&msgs2).Error
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
@@ -102,6 +103,8 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 		}
 	}
 	msgs = append(msgs, msgs2...)
+
+	sort.Sort(entities.MessageSlice(msgs))
 
 	tx.Commit()
 	return msgs, nil
