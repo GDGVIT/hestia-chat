@@ -96,6 +96,9 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
+		chatRoom.SenderName = ud1.Name
+		chatRoom.ReceiverName = ud2.Name
+
 		if err := msgSvc.CreateChat(chatRoom); err != nil {
 			views.Wrap(ctx, err)
 			return
@@ -103,8 +106,6 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 
 		msg := utils.Message(http.StatusOK, "Successfully created chat room")
 		msg["chat_room"] = chatRoom
-		msg["sender_name"] = ud1.Name
-		msg["receiver_name"] = ud2.Name
 		utils.Respond(ctx, msg)
 		return
 	}
@@ -144,34 +145,8 @@ func getMyChats(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		postBody1, _ := jettison.Marshal(&entities2.UserDetails{ID: chats[0].Sender})
-		resp, err := http.Post(fmt.Sprintf("%s/getDetailsById", os.Getenv("AUTH_SERVICE")), "application/json", bytes.NewBuffer(postBody1))
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-		ud1 := &entities2.UserDetails{}
-		if err := json.NewDecoder(resp.Body).Decode(ud1); err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-
-		postBody2, _ := jettison.Marshal(&entities2.UserDetails{ID: chats[0].Receiver})
-		resp2, err := http.Post(fmt.Sprintf("%s/getDetailsById", os.Getenv("AUTH_SERVICE")), "application/json", bytes.NewBuffer(postBody2))
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-		ud2 := &entities2.UserDetails{}
-		if err := json.NewDecoder(resp2.Body).Decode(ud2); err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-
 		msg := utils.Message(http.StatusOK, "Successfully fetched my chats")
 		msg["chats"] = chats
-		msg["sender_name"] = ud1.Name
-		msg["receiver_name"] = ud2.Name
 		utils.Respond(ctx, msg)
 		return
 	}
@@ -191,34 +166,8 @@ func getOtherChats(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		postBody1, _ := jettison.Marshal(&entities2.UserDetails{ID: chats[0].Sender})
-		resp, err := http.Post(fmt.Sprintf("%s/getDetailsById", os.Getenv("AUTH_SERVICE")), "application/json", bytes.NewBuffer(postBody1))
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-		ud1 := &entities2.UserDetails{}
-		if err := json.NewDecoder(resp.Body).Decode(ud1); err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-
-		postBody2, _ := jettison.Marshal(&entities2.UserDetails{ID: chats[0].Receiver})
-		resp2, err := http.Post(fmt.Sprintf("%s/getDetailsById", os.Getenv("AUTH_SERVICE")), "application/json", bytes.NewBuffer(postBody2))
-		if err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-		ud2 := &entities2.UserDetails{}
-		if err := json.NewDecoder(resp2.Body).Decode(ud2); err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
-
 		msg := utils.Message(http.StatusOK, "Successfully fetched my chats")
 		msg["chats"] = chats
-		msg["sender_name"] = ud1.Name
-		msg["receiver_name"] = ud2.Name
 		utils.Respond(ctx, msg)
 		return
 	}
