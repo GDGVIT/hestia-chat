@@ -88,6 +88,20 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 		}
 	}
 
+	msgs2 := make([]entities.Message, 0)
+
+	err = tx.Where("receiver_refer = ?", from).Where("sender = ?", to).Find(&msgs2).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, pkg.ErrNotFound
+		default:
+			return nil, pkg.ErrDatabase
+		}
+	}
+	msgs = append(msgs, msgs2...)
+
 	tx.Commit()
 	return msgs, nil
 }

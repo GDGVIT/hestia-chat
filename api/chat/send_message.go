@@ -2,6 +2,7 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ATechnoHazard/hestia-chat/api/middleware"
 	"github.com/ATechnoHazard/hestia-chat/api/views"
 	entities2 "github.com/ATechnoHazard/hestia-chat/api/views/entities"
@@ -12,6 +13,7 @@ import (
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"net/http"
+	"os"
 )
 
 func sendMessage(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
@@ -67,6 +69,8 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			views.Wrap(ctx, err)
 			return
 		}
+
+		http.Get(fmt.Sprintf("%s/getDetailsById",os.Getenv("AUTH_SERVICE")))
 
 		if err := msgSvc.CreateChat(chatRoom); err != nil {
 			views.Wrap(ctx, err)
