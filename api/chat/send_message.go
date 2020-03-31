@@ -12,7 +12,6 @@ import (
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"net/http"
-	"strconv"
 )
 
 func sendMessage(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
@@ -25,8 +24,7 @@ func sendMessage(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 		}
 
 		// Pull token off headers
-		userID, _ := strconv.Atoi(string(ctx.Request.Header.Peek("user_id")))
-		msg.Sender = uint(userID)
+		//userID, _ := strconv.Atoi(string(ctx.Request.Header.Peek("user_id")))
 
 		// Save message to db
 		if err := msgSvc.SaveMessage(msg); err != nil {
