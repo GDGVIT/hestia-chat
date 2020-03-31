@@ -75,19 +75,9 @@ func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 
 func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 	tx := c.db.Begin()
-	chat := &entities.Chat{}
-	err := tx.Where("receiver = ?", to).Where("sender = ?", from).Find(chat).Error
-	if err != nil {
-		tx.Rollback()
-		switch err {
-		case gorm.ErrRecordNotFound:
-			return nil, pkg.ErrNotFound
-		default:
-			return nil, pkg.ErrDatabase
-		}
-	}
+	msgs := make([]entities.Message, 0)
 
-	err = tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Find(&chat.Messages).Error
+	err := tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Find(&msgs).Error
 	if err != nil {
 		tx.Rollback()
 		switch err {
@@ -99,7 +89,7 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 	}
 
 	tx.Commit()
-	return chat.Messages, nil
+	return msgs, nil
 }
 
 func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
