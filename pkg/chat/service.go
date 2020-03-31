@@ -80,11 +80,10 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 
 	err := tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Order("created_at").Find(&msgs).Error
 	if err != nil {
-		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
-			return nil, pkg.ErrNotFound
 		default:
+			tx.Rollback()
 			return nil, pkg.ErrDatabase
 		}
 	}
@@ -95,7 +94,6 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 	if err != nil {
 		switch err {
 		case gorm.ErrRecordNotFound:
-			tx.Commit()
 			return msgs, nil
 		default:
 			tx.Rollback()
