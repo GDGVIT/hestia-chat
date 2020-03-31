@@ -105,7 +105,7 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
 	tx := c.db.Begin()
 	chats := make([]entities.Chat, 0)
-	if err := tx.Where("receiver = ?", userID).Find(&chats).Error; err != nil {
+	if err := tx.Where("request_receiver = ?", userID).Find(&chats).Error; err != nil {
 		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
@@ -121,7 +121,7 @@ func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
 func (c *chatSvc) GetOtherChats(userID uint) ([]entities.Chat, error) {
 	tx := c.db.Begin()
 	chats := make([]entities.Chat, 0)
-	if err := tx.Where("sender = ?", userID).Find(&chats).Error; err != nil {
+	if err := tx.Where("request_sender = ?", userID).Find(&chats).Error; err != nil {
 		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
