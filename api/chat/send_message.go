@@ -177,6 +177,6 @@ func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
 	r.POST(base+"/getMessages", middleware.JwtAuth(getChatMessages(msgSvc)))
 	r.POST(base+"/getChats", middleware.JwtAuth(getChatsForUser(msgSvc)))
-	r.POST(base+"/getMyChats", middleware.JwtAuth(getMyChats(msgSvc)))
-	r.POST(base+"/getOtherChats", middleware.JwtAuth(getOtherChats(msgSvc)))
+	r.POST(base+"/getOtherChats", middleware.JwtAuth(getMyChats(msgSvc)))
+	r.POST(base+"/getMyChats", middleware.JwtAuth(getOtherChats(msgSvc)))
 }
