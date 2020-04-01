@@ -72,7 +72,7 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		postBody1, _ := jettison.Marshal(&entities2.UserDetails{ID: chatRoom.Sender})
+		postBody1, _ := jettison.Marshal(&entities2.UserDetails{ID: chatRoom.RequestSender})
 		resp, err := http.Post(fmt.Sprintf("%s/getDetailsById", os.Getenv("AUTH_SERVICE")), "application/json", bytes.NewBuffer(postBody1))
 		if err != nil {
 			views.Wrap(ctx, err)
@@ -84,7 +84,7 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		postBody2, _ := jettison.Marshal(&entities2.UserDetails{ID: chatRoom.Receiver})
+		postBody2, _ := jettison.Marshal(&entities2.UserDetails{ID: chatRoom.RequestReceiver})
 		resp2, err := http.Post(fmt.Sprintf("%s/getDetailsById", os.Getenv("AUTH_SERVICE")), "application/json", bytes.NewBuffer(postBody2))
 		if err != nil {
 			views.Wrap(ctx, err)
