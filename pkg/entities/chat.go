@@ -10,4 +10,6 @@ type Chat struct {
 	SenderName      string    `json:"sender_name"`
 	ReceiverName    string    `json:"receiver_name"`
 	Messages        []Message `json:"messages" gorm:"foreignKey:RecieverRefer"`
+	ReceiverDeleted bool      `json:"receiver_deleted"`
+	SenderDeleted   bool      `json:"sender_deleted"`
 }

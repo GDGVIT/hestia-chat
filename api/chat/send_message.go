@@ -173,6 +173,25 @@ func getOtherChats(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func delChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		delReq := &entities2.DelReq{}
+		if err := json.Unmarshal(ctx.PostBody(), delReq); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		if err := msgSvc.DeleteChat(delReq.Receiver, delReq.Sender, delReq.WhoDeleted); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		msg := utils.Message(http.StatusOK, "Chat deleted successfully")
+		utils.Respond(ctx, msg)
+		return
+	}
+}
+
 func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/sendMessage", middleware.JwtAuth(sendMessage(msgSvc)))
 	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
@@ -180,4 +199,5 @@ func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/getChats", middleware.JwtAuth(getChatsForUser(msgSvc)))
 	r.POST(base+"/getOtherChats", middleware.JwtAuth(getMyChats(msgSvc)))
 	r.POST(base+"/getMyChats", middleware.JwtAuth(getOtherChats(msgSvc)))
+	r.DELETE(base+"/delChat", middleware.JwtAuth(delChat(msgSvc)))
 }

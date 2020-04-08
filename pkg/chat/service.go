@@ -14,6 +14,7 @@ type Service interface {
 	GetChatsByID(userID uint) ([]entities.Chat, error)
 	GetMyChats(userID uint) ([]entities.Chat, error)
 	GetOtherChats(userID uint) ([]entities.Chat, error)
+	DeleteChat(receiver, sender uint, whoDeleted string) error
 }
 
 type chatSvc struct {
@@ -111,7 +112,7 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
 	tx := c.db.Begin()
 	chats := make([]entities.Chat, 0)
-	if err := tx.Where("request_receiver = ?", userID).Find(&chats).Error; err != nil {
+	if err := tx.Where("request_receiver = ?", userID).Where("receiver_deleted = ?", false).Find(&chats).Error; err != nil {
 		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
@@ -127,7 +128,7 @@ func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
 func (c *chatSvc) GetOtherChats(userID uint) ([]entities.Chat, error) {
 	tx := c.db.Begin()
 	chats := make([]entities.Chat, 0)
-	if err := tx.Where("request_sender = ?", userID).Find(&chats).Error; err != nil {
+	if err := tx.Where("request_sender = ?", userID).Where("sender_deleted = ?", false).Find(&chats).Error; err != nil {
 		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
@@ -138,4 +139,43 @@ func (c *chatSvc) GetOtherChats(userID uint) ([]entities.Chat, error) {
 	}
 	tx.Commit()
 	return chats, nil
+}
+
+func (c *chatSvc) DeleteChat(receiver, sender uint, whoDeleted string) error {
+	tx := c.db.Begin()
+	chat := &entities.Chat{RequestReceiver: receiver, RequestSender: sender}
+	err := tx.Where("request_receiver = ?", receiver).Where("request_sender = ?", sender).Find(chat).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return pkg.ErrNotFound
+		default:
+			return pkg.ErrDatabase
+		}
+	}
+
+	switch whoDeleted {
+	case "receiver":
+		chat.ReceiverDeleted = true
+	case "sender":
+		chat.SenderDeleted = true
+	default:
+		tx.Rollback()
+		return pkg.ErrInvalidSlug
+	}
+
+	err = tx.Save(chat).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return pkg.ErrNotFound
+		default:
+			return pkg.ErrDatabase
+		}
+	}
+
+	tx.Commit()
+	return nil
 }
