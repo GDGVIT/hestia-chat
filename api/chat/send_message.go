@@ -64,9 +64,13 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 		}
 
 		if ud.Message != "None are blocked" {
-			retMsg := utils.Message(400, "this chat is blocked")
-			retMsg["messages"] = nil
-			utils.Respond(ctx, retMsg)
+			retMsg := make(map[string]interface{})
+			retMsg["status"] = 400
+			retMsg["messages"] = "this chat is blocked"
+			ctx.SetContentType("application/json; charset=utf-8")
+			ctx.SetStatusCode(400)
+			d, _ := jettison.Marshal(retMsg)
+			_, _ = ctx.Write(d)
 			return
 		}
 
