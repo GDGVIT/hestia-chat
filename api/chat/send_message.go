@@ -51,6 +51,25 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
+		resp, err := http.Get(fmt.Sprintf("https://hestia-report-do.herokuapp.com/api/report/check/?first_user="+
+			"%d&second_user=%d", msg.Sender, msg.ReceiverRefer))
+		if err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+		ud := &entities2.BlockedResp{}
+		if err := json.NewDecoder(resp.Body).Decode(ud); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		if ud.Message != "None are blocked" {
+			retMsg := utils.Message(400, "this chat is blocked")
+			retMsg["messages"] = nil
+			utils.Respond(ctx, retMsg)
+			return
+		}
+
 		msgs, err := msgSvc.GetMessages(msg.ReceiverRefer, msg.Sender)
 		if err != nil {
 			views.Wrap(ctx, err)

@@ -5,3 +5,7 @@ type DelReq struct {
 	Sender     uint   `json:"sender"`
 	WhoDeleted string `json:"who_deleted"`
 }
+
+type BlockedResp struct {
+	Message string `json:"message"`
+}
