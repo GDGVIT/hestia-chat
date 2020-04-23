@@ -45,5 +45,6 @@ func Wrap(ctx *fasthttp.RequestCtx, err error) {
 	}
 
 	json, _ := jettison.Marshal(errView)
+	ctx.SetStatusCode(code)
 	_, _ = ctx.Write(json)
 }

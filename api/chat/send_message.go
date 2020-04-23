@@ -9,6 +9,7 @@ import (
 	entities2 "github.com/ATechnoHazard/hestia-chat/api/views/entities"
 	"github.com/ATechnoHazard/hestia-chat/api/websocket"
 	"github.com/ATechnoHazard/hestia-chat/internal/utils"
+	"github.com/ATechnoHazard/hestia-chat/pkg"
 	"github.com/ATechnoHazard/hestia-chat/pkg/chat"
 	"github.com/ATechnoHazard/hestia-chat/pkg/entities"
 	"github.com/fasthttp/router"
@@ -123,6 +124,13 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 		chatRoom.ReceiverName = ud2.Name
 
 		if err := msgSvc.CreateChat(chatRoom); err != nil {
+			if err == pkg.ErrAlreadyExists {
+				ctx.SetStatusCode(http.StatusInternalServerError)
+				msg := utils.Message(http.StatusInternalServerError, "Chat already exists")
+				msg["chat_details"] = chatRoom
+				utils.Respond(ctx, msg)
+				return
+			}
 			views.Wrap(ctx, err)
 			return
 		}

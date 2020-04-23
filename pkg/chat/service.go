@@ -62,12 +62,19 @@ func (c *chatSvc) SaveMessage(msg *entities.Message) error {
 
 func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 	tx := c.db.Begin()
-	err := tx.Create(chat).Error
+	err := tx.Where("request_receiver = ?", chat.RequestReceiver).Where("request_sender = ?", chat.RequestSender).Find(&entities.Chat{}).Error
+	if err == nil {
+		tx.Rollback()
+		return pkg.ErrAlreadyExists
+	}
+
+	err = tx.Create(chat).Error
 	if err != nil {
 		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
 			return pkg.ErrNotFound
+
 		default:
 			return pkg.ErrDatabase
 		}
