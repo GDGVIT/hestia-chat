@@ -15,6 +15,7 @@ type Service interface {
 	GetMyChats(userID uint) ([]entities.Chat, error)
 	GetOtherChats(userID uint) ([]entities.Chat, error)
 	DeleteChat(receiver, sender uint, whoDeleted string) error
+	UpdateChat(chat *entities.Chat) error
 }
 
 type chatSvc struct {
@@ -177,5 +178,27 @@ func (c *chatSvc) DeleteChat(receiver, sender uint, whoDeleted string) error {
 	}
 
 	tx.Commit()
+	return nil
+}
+
+func (c *chatSvc) UpdateChat(chat *entities.Chat) error {
+	tx := c.db.Begin()
+	err := tx.Where("request_receiver = ?", chat.RequestReceiver).Where("request_sender = ?", chat.RequestSender).Find(&entities.Chat{}).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return pkg.ErrNotFound
+		default:
+			return pkg.ErrDatabase
+		}
+	}
+
+	err = tx.Save(chat).Error
+	if err != nil {
+		tx.Rollback()
+		return pkg.ErrDatabase
+	}
+
 	return nil
 }

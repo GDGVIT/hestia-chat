@@ -189,7 +189,7 @@ func getOtherChats(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		msg := utils.Message(http.StatusOK, "Successfully fetched my chats")
+		msg := utils.Message(http.StatusOK, "Successfully fetched other chats")
 		msg["chats"] = chats
 		utils.Respond(ctx, msg)
 		return
@@ -215,6 +215,25 @@ func delChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func updateChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		updateChat := &entities.Chat{}
+		if err := json.Unmarshal(ctx.PostBody(), updateChat); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		if err := msgSvc.UpdateChat(updateChat); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		msg := utils.Message(http.StatusOK, "Chat updated successfully")
+		utils.Respond(ctx, msg)
+		return
+	}
+}
+
 func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/sendMessage", middleware.JwtAuth(sendMessage(msgSvc)))
 	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
@@ -223,4 +242,5 @@ func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/getOtherChats", middleware.JwtAuth(getMyChats(msgSvc)))
 	r.POST(base+"/getMyChats", middleware.JwtAuth(getOtherChats(msgSvc)))
 	r.DELETE(base+"/delChat", middleware.JwtAuth(delChat(msgSvc)))
+	r.POST(base+"/updateChat", middleware.JwtAuth(updateChat(msgSvc)))
 }
