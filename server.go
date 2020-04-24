@@ -60,6 +60,7 @@ func makeDB() *gorm.DB {
 	}
 	log.Infow("Automigrating db")
 	db.AutoMigrate(&entities.Message{}, &entities.Chat{})
+	db.DB().SetMaxOpenConns(2)
 	return db
 }
 
