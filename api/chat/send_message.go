@@ -238,6 +238,31 @@ func updateChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func addItem(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
+		updateChat := &entities.Chat{}
+		if err := json.Unmarshal(ctx.PostBody(), updateChat); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		item := &entities.Item{
+			RequestSender:   updateChat.RequestSender,
+			RequestReceiver: updateChat.RequestReceiver,
+			Item:            updateChat.Title,
+		}
+
+		if err := msgSvc.AddItem(item); err != nil {
+			views.Wrap(ctx, err)
+			return
+		}
+
+		msg := utils.Message(http.StatusOK, "Items updated successfully")
+		utils.Respond(ctx, msg)
+		return
+	}
+}
+
 func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/sendMessage", middleware.JwtAuth(sendMessage(msgSvc)))
 	r.POST(base+"/createChat", middleware.JwtAuth(createChat(msgSvc)))
@@ -247,4 +272,5 @@ func MakeMessageHandler(r *router.Router, msgSvc chat.Service, base string) {
 	r.POST(base+"/getMyChats", middleware.JwtAuth(getOtherChats(msgSvc)))
 	r.DELETE(base+"/delChat", middleware.JwtAuth(delChat(msgSvc)))
 	r.POST(base+"/updateChat", middleware.JwtAuth(updateChat(msgSvc)))
+	r.POST(base+"/addItem", middleware.JwtAuth(addItem(msgSvc)))
 }

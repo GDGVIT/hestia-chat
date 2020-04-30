@@ -17,6 +17,7 @@ type Service interface {
 	DeleteChat(receiver, sender uint, whoDeleted string) error
 	UpdateChat(chat *entities.Chat) error
 	GetChat(chat *entities.Chat) (*entities.Chat, error)
+	AddItem(item *entities.Item) error
 }
 
 type chatSvc struct {
@@ -80,6 +81,23 @@ func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 			return pkg.ErrDatabase
 		}
 	}
+
+	err = tx.Create(entities.Item{
+		RequestSender:   chat.RequestSender,
+		RequestReceiver: chat.RequestReceiver,
+		Item:            chat.Title,
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return pkg.ErrNotFound
+
+		default:
+			return pkg.ErrDatabase
+		}
+	}
+
 	tx.Commit()
 	return nil
 }
@@ -235,6 +253,7 @@ func (c *chatSvc) UpdateChat(chat *entities.Chat) error {
 		return pkg.ErrDatabase
 	}
 
+	tx.Commit()
 	return nil
 }
 
@@ -251,5 +270,24 @@ func (c *chatSvc) GetChat(chat *entities.Chat) (*entities.Chat, error) {
 		}
 	}
 
+	tx.Commit()
 	return chat, err
+}
+
+func (c *chatSvc) AddItem(item *entities.Item) error {
+	tx := c.db.Begin()
+	err := tx.Save(item).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return pkg.ErrNotFound
+
+		default:
+			return pkg.ErrDatabase
+		}
+	}
+
+	tx.Commit()
+	return nil
 }
