@@ -9,13 +9,14 @@ import (
 
 type Service interface {
 	SaveMessage(msg *entities.Message) error
-	GetMessages(to, from uint) ([]entities.Message, error)
+	GetMessages(to, from uint) ([]entities.Message, []entities.Item, error)
 	CreateChat(chat *entities.Chat) error
 	GetChatsByID(userID uint) ([]entities.Chat, error)
 	GetMyChats(userID uint) ([]entities.Chat, error)
 	GetOtherChats(userID uint) ([]entities.Chat, error)
 	DeleteChat(receiver, sender uint, whoDeleted string) error
 	UpdateChat(chat *entities.Chat) error
+	GetChat(chat *entities.Chat) (*entities.Chat, error)
 }
 
 type chatSvc struct {
@@ -83,17 +84,18 @@ func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 	return nil
 }
 
-func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
+func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, []entities.Item, error) {
 	tx := c.db.Begin()
 	msgs := make([]entities.Message, 0)
 
 	err := tx.Where("receiver_refer = ?", to).Where("sender = ?", from).Order("created_at").Find(&msgs).Error
 	if err != nil {
+		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
 		default:
 			tx.Rollback()
-			return nil, pkg.ErrDatabase
+			return nil, nil, pkg.ErrDatabase
 		}
 	}
 
@@ -101,20 +103,46 @@ func (c *chatSvc) GetMessages(to, from uint) ([]entities.Message, error) {
 
 	err = tx.Where("receiver_refer = ?", from).Where("sender = ?", to).Order("created_at").Find(&msgs2).Error
 	if err != nil {
+		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
-			return msgs, nil
 		default:
 			tx.Rollback()
-			return nil, pkg.ErrDatabase
+			return nil, nil, pkg.ErrDatabase
 		}
 	}
 	msgs = append(msgs, msgs2...)
 
+	items := make([]entities.Item, 0)
+	err = tx.Where("request_sender = ?", from).Where("request_receiver = ?", to).Find(&items).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+		default:
+			tx.Rollback()
+			return nil, nil, pkg.ErrDatabase
+		}
+	}
+
+	items2 := make([]entities.Item, 0)
+	err = tx.Where("request_sender = ?", to).Where("request_receiver = ?", from).Find(&items2).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+		default:
+			tx.Rollback()
+			return nil, nil, pkg.ErrDatabase
+		}
+	}
+
+	items = append(items, items2...)
+
 	sort.Sort(entities.MessageSlice(msgs))
 
 	tx.Commit()
-	return msgs, nil
+	return msgs, items, nil
 }
 
 func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
@@ -208,4 +236,20 @@ func (c *chatSvc) UpdateChat(chat *entities.Chat) error {
 	}
 
 	return nil
+}
+
+func (c *chatSvc) GetChat(chat *entities.Chat) (*entities.Chat, error) {
+	tx := c.db.Begin()
+	err := tx.Where("request_receiver = ? AND request_sender = ?", chat.RequestReceiver, chat.RequestSender).Or("request_receiver = ? AND request_sender = ?", chat.RequestSender, chat.RequestReceiver).Find(&entities.Chat{}).Error
+	if err != nil {
+		tx.Rollback()
+		switch err {
+		case gorm.ErrRecordNotFound:
+			return nil, pkg.ErrNotFound
+		default:
+			return nil, pkg.ErrDatabase
+		}
+	}
+
+	return chat, err
 }

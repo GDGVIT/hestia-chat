@@ -9,7 +9,6 @@ type Message struct {
 	Text          string `json:"text" gorm:"not null"`
 }
 
-
 type MessageSlice []Message
 
 func (m MessageSlice) Len() int {

@@ -59,7 +59,7 @@ func makeDB() *gorm.DB {
 		db = db.Debug()
 	}
 	log.Infow("Automigrating db")
-	db.AutoMigrate(&entities.Message{}, &entities.Chat{})
+	db.AutoMigrate(&entities.Message{}, &entities.Chat{}, &entities.Item{})
 	db.DB().SetMaxOpenConns(2)
 	return db
 }

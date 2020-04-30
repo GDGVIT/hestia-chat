@@ -52,19 +52,14 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		resp, err := http.Get(fmt.Sprintf("https://hestia-report-do.herokuapp.com/api/report/check/?first_user="+
-			"%d&second_user=%d", msg.Sender, msg.ReceiverRefer))
+		ch := &entities.Chat{RequestSender: msg.Sender, RequestReceiver: msg.ReceiverRefer}
+		ch, err := msgSvc.GetChat(ch)
 		if err != nil {
 			views.Wrap(ctx, err)
 			return
 		}
-		ud := &entities2.BlockedResp{}
-		if err := json.NewDecoder(resp.Body).Decode(ud); err != nil {
-			views.Wrap(ctx, err)
-			return
-		}
 
-		if ud.Message != "None are blocked" {
+		if ch.IsReported {
 			retMsg := make(map[string]interface{})
 			retMsg["status"] = 400
 			retMsg["messages"] = "this chat is blocked"
@@ -75,7 +70,7 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		msgs, err := msgSvc.GetMessages(msg.ReceiverRefer, msg.Sender)
+		msgs, items, err := msgSvc.GetMessages(msg.ReceiverRefer, msg.Sender)
 		if err != nil {
 			views.Wrap(ctx, err)
 			return
@@ -83,6 +78,7 @@ func getChatMessages(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 
 		retMsg := utils.Message(http.StatusOK, "Successfully retrieved chat messages")
 		retMsg["messages"] = msgs
+		retMsg["items"] = items
 		utils.Respond(ctx, retMsg)
 		return
 	}
