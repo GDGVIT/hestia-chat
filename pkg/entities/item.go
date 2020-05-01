@@ -7,4 +7,5 @@ type Item struct {
 	RequestSender   uint   `json:"request_sender"`
 	RequestReceiver uint   `json:"request_receiver"`
 	Item            string `json:"item"`
+	ReqDesc         string `json:"req_desc"`
 }
