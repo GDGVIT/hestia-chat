@@ -121,6 +121,18 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 
 		if err := msgSvc.CreateChat(chatRoom); err != nil {
 			if err == pkg.ErrAlreadyExists {
+				item := &entities.Item{
+					RequestSender:   chatRoom.RequestSender,
+					RequestReceiver: chatRoom.RequestReceiver,
+					Item:            chatRoom.Title,
+					ReqDesc:         chatRoom.ReqDesc,
+				}
+
+				if err := msgSvc.AddItem(item); err != nil {
+					views.Wrap(ctx, err)
+					return
+				}
+
 				ctx.SetStatusCode(http.StatusInternalServerError)
 				msg := utils.Message(http.StatusInternalServerError, "Chat already exists")
 				msg["chat_details"] = chatRoom
