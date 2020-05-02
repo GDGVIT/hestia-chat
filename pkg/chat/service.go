@@ -86,6 +86,7 @@ func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 		RequestSender:   chat.RequestSender,
 		RequestReceiver: chat.RequestReceiver,
 		Item:            chat.Title,
+		ReqDesc:         chat.ReqDesc,
 	}).Error
 	if err != nil {
 		tx.Rollback()

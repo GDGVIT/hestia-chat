@@ -250,6 +250,7 @@ func addItem(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 			RequestSender:   updateChat.RequestSender,
 			RequestReceiver: updateChat.RequestReceiver,
 			Item:            updateChat.Title,
+			ReqDesc:         updateChat.ReqDesc,
 		}
 
 		if err := msgSvc.AddItem(item); err != nil {
