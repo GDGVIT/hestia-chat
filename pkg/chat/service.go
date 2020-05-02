@@ -278,22 +278,16 @@ func (c *chatSvc) GetChat(chat *entities.Chat) (*entities.Chat, error) {
 func (c *chatSvc) AddItem(item *entities.Item) error {
 	tx := c.db.Begin()
 
-	err := tx.Where("request_sender = ?", item.RequestReceiver).Where("request_receiver = ?", item.RequestReceiver).
-		Where("item = ?", item.Item).Where("req_desc = ?", item.ReqDesc).Error
+	err := tx.Save(item).Error
 	if err != nil {
+		tx.Rollback()
 		switch err {
-		case pkg.ErrNotFound:
-			err := tx.Save(item).Error
-			if err != nil {
-				tx.Rollback()
-				return pkg.ErrDatabase
-			}
+		case gorm.ErrRecordNotFound:
+			return pkg.ErrNotFound
+
 		default:
-			tx.Rollback()
 			return pkg.ErrDatabase
 		}
-	} else {
-		return pkg.ErrAlreadyExists
 	}
 
 	tx.Commit()
