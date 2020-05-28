@@ -137,7 +137,7 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 
 				ctx.SetStatusCode(http.StatusInternalServerError)
 				msg := utils.Message(http.StatusInternalServerError, "Chat already exists")
-				msg["chat_details"] = chatRoom
+				msg["chat_room"] = chatRoom
 				utils.Respond(ctx, msg)
 				return
 			}
