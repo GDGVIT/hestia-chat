@@ -82,7 +82,7 @@ func (c *chatSvc) CreateChat(chat *entities.Chat) error {
 		}
 	}
 
-	err = tx.Create(entities.Item{
+	err = tx.Create(&entities.Item{
 		RequestSender:   chat.RequestSender,
 		RequestReceiver: chat.RequestReceiver,
 		Item:            chat.Title,

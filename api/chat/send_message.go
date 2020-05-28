@@ -15,6 +15,7 @@ import (
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 	"github.com/wI2L/jettison"
+	"log"
 	"net/http"
 	"os"
 )
@@ -88,6 +89,7 @@ func createChat(msgSvc chat.Service) func(ctx *fasthttp.RequestCtx) {
 	return func(ctx *fasthttp.RequestCtx) {
 		chatRoom := &entities.Chat{}
 		if err := json.Unmarshal(ctx.PostBody(), chatRoom); err != nil {
+			log.Println(string(ctx.PostBody()))
 			views.Wrap(ctx, err)
 			return
 		}
