@@ -36,7 +36,7 @@ func Wrap(ctx *fasthttp.RequestCtx, err error) {
 	ctx.SetContentType("application/json; charset=utf-8")
 	code := ErrHTTPStatusMap[err.Error()]
 	if code == 0 {
-		code = http.StatusInternalServerError
+		code = http.StatusBadRequest
 	}
 
 	errView := ErrView{
