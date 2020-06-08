@@ -3,8 +3,8 @@ package middleware
 import "github.com/valyala/fasthttp"
 
 const (
-	corsAllowHeaders     = "authorization"
-	corsAllowMethods     = "HEAD,GET,POST,PUT,DELETE,OPTIONS"
+	corsAllowHeaders     = "*"
+	corsAllowMethods     = "*"
 	corsAllowOrigin      = "*"
 	corsAllowCredentials = "true"
 )
