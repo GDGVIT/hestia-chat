@@ -183,7 +183,7 @@ func (c *chatSvc) GetMyChats(userID uint) ([]entities.Chat, error) {
 func (c *chatSvc) GetOtherChats(userID uint) ([]entities.Chat, error) {
 	tx := c.db.Begin()
 	chats := make([]entities.Chat, 0)
-	if err := tx.Where("request_sender = ?", userID).Where("sender_deleted = ?", false).Find(&chats).Error; err != nil {
+	if err := tx.Where("request_sender = ?", userID).Where("receiver_deleted = ?", false).Find(&chats).Error; err != nil {
 		tx.Rollback()
 		switch err {
 		case gorm.ErrRecordNotFound:
@@ -248,7 +248,7 @@ func (c *chatSvc) UpdateChat(chat *entities.Chat) error {
 		}
 	}
 
-	err = tx.Save(chat).Error
+	err = tx.Update(chat).Error
 	if err != nil {
 		tx.Rollback()
 		return pkg.ErrDatabase
