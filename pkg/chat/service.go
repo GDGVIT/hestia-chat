@@ -248,7 +248,7 @@ func (c *chatSvc) UpdateChat(chat *entities.Chat) error {
 		}
 	}
 
-	err = tx.Update(chat).Error
+	err = tx.Model(&entities.Chat{}).Update(chat).Error
 	if err != nil {
 		tx.Rollback()
 		return pkg.ErrDatabase
